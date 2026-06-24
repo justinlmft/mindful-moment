@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mindful Moment — Session Builder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
+  :root{
+    --bone:#FAF9F5; --ink:#1a1f2a; --line:#e4e1d8; --card:#ffffff;
+    --muted:#8a877e; --soft:#f1efe8; --draft:#b9842f; --notes:#6b685f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:var(--bone);color:var(--ink);line-height:1.5;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  header{padding:18px 26px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  header h1{margin:0;font-size:19px;letter-spacing:.2px;font-weight:700}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .wrap{display:flex;flex:1;min-height:0}
+  .panel{padding:22px 26px}
+  .dials{width:350px;flex:0 0 350px;overflow-y:auto;display:flex;flex-direction:column}
+  #splitter{flex:0 0 7px;cursor:col-resize;border-left:1px solid var(--line);transition:background .12s}
+  #splitter:hover,#splitter.dragging{background:var(--line)}
+  .out{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+  .out .tabs{flex:0 0 auto}
+  #slidesWrap{flex:1;min-height:0;overflow-y:auto;padding-top:2px}
+  .dial{margin-bottom:24px}
+  .dial.sep{border-top:2px solid var(--line);padding-top:22px;margin-top:2px}
+  .dial label.h{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink);margin-bottom:10px;font-weight:700}
+  .sub{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opt{border:1px solid var(--line);background:var(--card);color:var(--ink);
+    padding:7px 11px;border-radius:8px;cursor:pointer;font-size:13px;transition:.12s;display:flex;align-items:center;gap:7px}
+  .opt:hover{border-color:var(--ink)}
+  .opt.sel{background:var(--ink);border-color:var(--ink);color:var(--bone);font-weight:600}
+  .opt .ord{width:18px;height:18px;border-radius:50%;background:var(--bone);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .toggle{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer;margin-top:8px}
+  .toggle input{width:15px;height:15px;accent-color:var(--ink)}
+  .numrow{display:flex;align-items:center;gap:9px;font-size:13px}
+  .numrow input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13px}
+  .randbar{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .tabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;background:var(--soft);color:var(--muted);
+    border-radius:9px 9px 0 0;cursor:pointer;font-size:13px;transition:.12s;position:relative;top:1px}
+  .tab:hover{color:var(--ink)}
+  .tab.sel{background:var(--bone);color:var(--ink);border-bottom:1px solid var(--bone);font-weight:600}
+  .name{font-size:17px;font-weight:700;margin:0 0 4px}
+  .flow{display:flex;gap:8px;align-items:center;margin:2px 0 16px;flex-wrap:wrap}
+  .flow .step{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+    border-radius:999px;padding:4px 12px 4px 5px;font-size:12.5px;font-weight:600}
+  .flow .num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--bone);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .flow .arr{color:var(--muted);font-size:14px}
+  .bar{display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+  .btn{padding:8px 14px;border:1px solid var(--ink);background:var(--ink);color:var(--bone);
+    border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit}
+  .btn:hover{opacity:.85}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .count{font-size:12px;color:var(--muted)}
+  .slide{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:10px;background:var(--card)}
+  .slide.fixedc{border-style:dashed;background:transparent}
+  .slide .tag{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;margin-bottom:5px;color:var(--muted)}
+  .slide .stu{font-size:16px;margin:2px 0 0;font-weight:600}
+  .slide .bod{font-size:13px;color:var(--ink);opacity:.75;margin:5px 0 0;line-height:1.6}
+  .slide .note{font-size:12.5px;color:var(--notes);margin:8px 0 0;padding-left:10px;border-left:2px solid var(--line);line-height:1.6}
+  .slide .note b{font-weight:600;text-transform:uppercase;letter-spacing:.8px;font-size:10px;color:var(--muted)}
+
+  /* ---------- PRESENTER CONSOLE ---------- */
+  #console{position:fixed;inset:0;background:var(--bone);display:none;flex-direction:column;z-index:50}
+  #console.on{display:flex}
+  .cTop{display:flex;justify-content:space-between;align-items:center;padding:14px 26px;border-bottom:1px solid var(--line)}
+  .cTop .cnt{font-size:14px;color:var(--muted)}
+  .cMain{flex:1;display:flex;min-height:0}
+  .cPrev{flex:0 0 46%;padding:22px;display:flex;flex-direction:column;gap:12px;border-right:1px solid var(--line)}
+  .pvLabel{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:600}
+  .pvBox{border:1px solid var(--line);background:#fff;overflow:hidden;position:relative;width:100%;aspect-ratio:16/9;border-radius:6px}
+  .cNext{font-size:14px;color:var(--muted)}
+  .cNext b{color:var(--ink);font-weight:600}
+  .cNotes{flex:1;padding:26px;overflow-y:auto}
+  .cNotes .nh{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:600;margin-bottom:12px}
+  .cNotes .nt{font-size:19px;line-height:1.6;color:var(--ink);max-width:640px}
+  .cNotes .nt p{margin:0 0 12px}
+  .cNotes .nt ul{margin:0 0 14px;padding-left:24px}
+  .cNotes .nt li{margin:5px 0}
+  .cNotes .nt:empty::before{content:"— (lots of quiet) —";color:var(--muted)}
+  .cBot{display:flex;justify-content:space-between;align-items:center;padding:14px 26px;border-top:1px solid var(--line)}
+  .cBot button{background:var(--ink);border:1px solid var(--ink);color:var(--bone);border-radius:8px;padding:9px 18px;cursor:pointer;font-size:14px;margin-left:8px;font-family:inherit}
+  .cBot button.ghost{background:transparent;color:var(--ink)}
+  .shareTip{font-size:12px;color:var(--muted)}
+
+  @media print{
+    .dials,.bar,header p,.tabs,#console{display:none}
+    body{background:#fff;color:#000;height:auto;overflow:visible;display:block}
+    .slide{border-color:#bbb;background:#fff;color:#000}
+    .wrap{display:block}
+    .out{overflow:visible;display:block}
+    #slidesWrap{overflow:visible}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:14px">
+    <img src="https://static.wixstatic.com/media/2d354d_b31143f17d0b49b08b0f3df8b49c78f3~mv2.png" alt="Unstucking Academy" style="height:34px;width:auto;display:block">
+    <h1>Mindful Moment — Session Builder</h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel dials">
+    <div class="dial">
+      <label class="h">Senses — click to add in order</label>
+      <p class="sub">Tap to add (numbered in spoken order) · tap again to remove.</p>
+      <div class="opts" id="senseOpts"></div>
+    </div>
+
+    <div class="dial sep">
+      <label class="h">Shape</label>
+      <label class="toggle"><input type="checkbox" id="tBreath" onchange="st.breathEach=this.checked;render()" checked> Breath reset before each sense</label>
+      <label class="toggle"><input type="checkbox" id="tAck" onchange="st.acknowledge=this.checked;render()" checked> Acknowledge slide (open)</label>
+      <label class="toggle"><input type="checkbox" id="tMove" onchange="st.closeMove=this.checked;render()" checked> Move slide (close)</label>
+      <label class="toggle"><input type="checkbox" id="tKind" onchange="st.kindness=this.checked;render()" checked> Kindness slide (close)</label>
+    </div>
+
+    <div class="randbar">
+      <button class="btn" style="width:100%" onclick="randomize()">🎲 Randomize senses & order</button>
+      <button class="btn ghost" style="width:100%" onclick="clearSenses()">Clear senses</button>
+    </div>
+  </div>
+
+  <div id="splitter"></div>
+
+  <div class="panel out">
+    <p class="name" id="sName"></p>
+    <div class="flow" id="sAgenda"></div>
+    <div class="bar">
+      <button class="btn" onclick="startPresent()">▶ Present</button>
+      <button class="btn ghost" onclick="window.print()">Print / Save PDF</button>
+      <span class="count" id="slideCount"></span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="slidesWrap"><div id="slidesView"></div></div>
+  </div>
+</div>
+
+<!-- Presenter console -->
+<div id="console">
+  <div class="cTop"><span class="cnt" id="pCount"></span></div>
+  <div class="cMain">
+    <div class="cPrev">
+      <span class="pvLabel">Current slide</span>
+      <div class="pvBox" id="pvBox"></div>
+      <div class="cNext" id="cNext"></div>
+    </div>
+    <div class="cNotes">
+      <div class="nh">Presenter notes</div>
+      <div class="nt" id="cNotes"></div>
+    </div>
+  </div>
+  <div class="cBot">
+    <span class="shareTip">← → arrows · space = next · Esc = end</span>
+    <span>
+      <button class="ghost" onclick="pPrev(event)">← Prev</button>
+      <button onclick="pNext(event)">Next →</button>
+      <button class="ghost" onclick="endPresent()">End session</button>
+    </span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MINDFUL MOMENT — content
+   Each student slide shows a single word / short phrase.
+   The full spoken script lives in presenter notes.
+   ============================================================ */
+
+/* The five sense pathways (CB anchor entries, kept MM-simple). */
+const SENSES = {
+  touch:{ word:"touch", note:
+    "Now, let’s check in with touch. We’ll start with your entire body. — What is it you’re sitting, standing, laying, or leaning on? Can you feel its firmness? Or is it soft? Does it let you sink into it? — What can you feel specifically on your skin? The air? The fabric of your clothes? Something you can hold onto nearby?" },
+  sight:{ word:"sight", note:
+    "Now, we’ll use your eyes. Open them if they’re closed, as they’re ready to open. You don’t need to do anything special — just look where they want you to look. If your neck wants to move to help your eyes see more, let your neck and eyes work together. — Is there one thing pulling at your eyes? What’s its shape? Let your eyes trace the edges. Notice how the light from the room touches it. And the shadows it creates." },
+  sound:{ word:"sound", note:
+    "Now, what do you hear? Anything? Silence? — Inside the room… what do you hear? — Outside the room… what do you hear?" },
+  movement:{ word:"movement", note:
+    "Let’s add some gentle, on-purpose movement. Small and easy — you’re not performing. — Roll your ankles, slow, both directions. Roll your wrists, let your hands soften. Roll your shoulders — up, back, and down — let them drop. Stretch into whatever wants to lengthen. — Then pause. Notice what lingers. The sensation doesn’t stop the moment you do." },
+  imagination:{ word:"imagination", note:
+    "Let’s use your imagination. Bring to mind a place where you feel at ease — real or imagined, a memory or made up. Let it take shape. Indoors or out? Day or night? Where are you in it? — Look around: what do you see? What do you hear there, or is it quiet? What do you feel there — the air, the temperature, the ground beneath you?" }
+};
+
+const BREATH_NOTE = "Check in with the natural ins and outs of your breath. How is your body naturally breathing right now? Don’t change it, just notice it. If it changes by itself because you paid attention, that’s fine. — Chest or belly? Full or shallow? Tense or relaxed?";
+
+/* ---------- STATE ---------- */
+let st = {
+  order:["sound","touch","sight"],   // selected senses, in spoken order
+  breathEach:true,
+  acknowledge:true,
+  closeMove:true,
+  kindness:true
+};
+
+/* ---------- BEAT MODEL ----------
+   style: "cover" (framed phrase, eyebrow, logo) | "word" (centered single word)
+   h = student headline · eyebrow = small top-right label (cover only)
+   note = spoken presenter script (never shown to students)
+   logo = show logo+byline (cover slides) */
+function cover(h,note,eyebrow,logo){ return {style:"cover",h,note:note||"",eyebrow:eyebrow||"",flow:"",logo:logo!==false,fixed:true}; }
+function word(h,note,fixed){ return {style:"word",h,note:note||"",eyebrow:"",flow:"",logo:false,fixed:!!fixed}; }
+
+/* Upcoming Events — the closing invitation to the Academy.
+   Uses the site-wide [data-snb] system (same as the website): values are pulled
+   live from site-data.json at present-time; the baked text is the fallback. */
+function eventsBeat(){
+  return {style:"events",h:"join us live",note:
+    "If this gave you a little of what you needed, there’s more. We practice live every week or two inside the Unstucking Academy — Capacity Builders, more Mindful Moments, and monthly Q&As. — Here’s what’s coming up next. Come join us — I’d love to keep practicing with you. — (Check the Academy calendar for everything, plus the cohorts.)",
+    eyebrow:"",flow:"",logo:true,fixed:true};
+}
+const EVENTS_ROWS=[
+  {name:"Capacity Builder", snb:"events.capacity_builder.next_display", fb:"Monday, June 15 at 9:00 AM PT",      academy:true},
+  {name:"Mindful Moment",   snb:"events.mindful_moment.next_display",   fb:"Wednesday, June 17 at 9:00 AM PT",   academy:false},
+  {name:"Q&A",              snb:"events.qa.next_display",               fb:"Monday, July 13 at 9:30 AM PT",      academy:true}
+];
+
+/* sense sequence as chips — shown on the welcome slide so students know what to expect */
+function flowHTML(){
+  if(!st.order.length) return "";
+  return '<div class="mmflow">'+
+    st.order.map((k,i)=>'<span class="fstep">'+cap(k)+'</span>').join('<span class="farr">→</span>')+
+    '</div>';
+}
+
+/* ---------- FULL SESSION ---------- */
+const TABS={intro:"Intro",practice:"Practice",closing:"Outro"};
+function buildBeats(){
+  let B=[];
+  const sec=(name,from)=>{for(let i=from;i<B.length;i++)B[i].section=name;};
+
+  /* INTRO (fixed arc) */
+  const welcome=cover("welcome.",
+    "Welcome! The whole idea here is super simple. For the next 20ish minutes, we’re just creating a space to connect with the present moment. — Whether you’re here intentionally or doing something else… let my voice point your thoughts to the present moment. If your mind wanders, that’s okay — come back when prompted. Pause when needed. — Today we’ll move through: "+(st.order.length?st.order.map(cap).join(", "):"a few senses")+".");
+  welcome.flow=flowHTML();
+  B.push(welcome);
+  B.push(cover("the start of a<br>mindfulness practice.",
+    "Of course, this is not therapy. This is not coaching or personal life advice. However, these very simple mindfulness prompts are what I use when I work with people to help them develop a connection to the present moment, cultivate a mindfulness practice, and even reduce experiences like anxiety. — These prompts are the beginning of a much deeper mindfulness practice."));
+  B.push(cover("participation?",
+    "There’s no pressure to participate. All you need to worry about is the present moment. — If you’d like to be more active and share an experience in the chat, go right ahead. Keep it very present-moment focused, following what we’re doing here."));
+  B.push(cover("no pressure.<br>just presence.",
+    "The motto for this is: no pressure, just presence. From here on, I’ll give a simple prompt and a few follow-ups. But mostly, lots of quiet. That’s really it. Sound good? Let’s begin."));
+  if(st.acknowledge){
+    B.push(word("acknowledge",
+      "As we begin, acknowledge what else you might be holding onto — a current or past context. Not going into details. Just acknowledge what else you have, and give yourself permission to also practice mindfulness. — These Mindful Moments aren’t dismissive of what else you have, and aren’t rejecting it. They create space to acknowledge it, and eventually pave the way for those other feelings when you’re ready — the deeper work of the Unstucking Academy. For now, we acknowledge, and give ourselves permission to also be more present."));
+  }
+  sec("intro",0);
+
+  /* PRACTICE (varies) */
+  let m=B.length;
+  st.order.forEach(k=>{
+    if(st.breathEach) B.push(word("breath",BREATH_NOTE));
+    const s=SENSES[k];
+    if(s) B.push(word(s.word,s.note));
+  });
+  if(st.breathEach && st.order.length) B.push(word("breath",BREATH_NOTE));
+  sec("practice",m);
+
+  /* OUTRO (fixed arc) */
+  m=B.length;
+  if(st.closeMove){
+    B.push(word("move",
+      "We’ll end this mindfulness practice the way we always do, inside the Unstucking Academy. Let your body move in whatever way it would like to. There’s no wrong way. No prescriptive movement. — Push, pull, squeeze, wiggle, jump, squat, stand, stretch, lie down, shimmy, or shake… Turn your camera off if you’d like, if you need to do something silly."));
+  }
+  if(st.kindness){
+    B.push(word("kindness","Offer yourself a little kindness. You’ve earned it. Even a ‘good job, self’ counts."));
+  }
+  B.push(cover("woo-hoo! 🎉",
+    "You did it. You practiced mindfulness. You survived. — Good job to you if this was a return to simple mindfulness. Good job to you if this was your first time. Good job to you if this was a continuation of your practices."));
+  B.push(cover("thank you.",
+    "Thank you for being a part of this Mindful Moment. Thank you for taking the time to join. I hope you got a little bit of what you needed. — If you don’t mind, share in the chat what this was like for you. Maybe just a word if you’ve got one. Share more if you’ve got more. — Tell someone in the chat that you appreciate them sharing, or that you can relate, or just leave a thumbs up on their comment. — I hope we can meet again and continue to practice."));
+  B.push(eventsBeat());
+  sec("closing",m);
+
+  return B;
+}
+
+/* ---------- NAMES ---------- */
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function sessionName(){
+  const sn = st.order.length ? st.order.map(cap).join(" · ") : "no senses yet";
+  return "Mindful Moment — "+sn;
+}
+
+/* ---------- STUDENT SLIDE MARKUP ---------- */
+function studentSlideHTML(b){
+  const foot='<div class="foot"><img class="logo" src="https://static.wixstatic.com/media/2d354d_af56ea98dfab423d908b57ed57a01937~mv2.png" alt="Unstucking Academy"><span class="byline">JUSTIN SUNSERI, STUCKNOTBROKEN.COM</span></div>';
+  if(b.style==="events"){
+    const head='<li class="evhead"><span>Practice</span><span class="evwhen">Next session</span><span class="evmark">Academy</span></li>';
+    const rows=EVENTS_ROWS.map(r=>
+      '<li><span class="evname">'+r.name+'</span>'+
+      '<span class="evwhen" data-snb="'+r.snb+'">'+r.fb+'</span>'+
+      '<span class="evmark'+(r.academy?' yes':' free')+'">'+(r.academy?'✓':'free')+'</span></li>').join("");
+    return '<div class="s events"><div class="eyebrow">THE UNSTUCKING ACADEMY</div>'+
+      '<h1>'+b.h+'</h1><ul class="evlist">'+head+rows+'</ul>'+
+      '<div class="evnote">✓ Academy members · &ldquo;free&rdquo; open to all · check the Academy calendar for cohorts &amp; more</div>'+foot+'</div>';
+  }
+  if(b.style==="cover")
+    return '<div class="s cover'+(b.flow?' hasflow':'')+'"><div class="eyebrow">'+(b.eyebrow||"")+'</div>'+
+      '<h1>'+b.h+'</h1>'+(b.flow||"")+(b.logo?foot:"")+'</div>';
+  return '<div class="s word"><div class="ww">'+b.h+'</div></div>';
+}
+const STUDENT_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
+  .mmframe{position:absolute;inset:0;container-type:size;background:#FAF9F5;color:#1a1f2a;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;overflow:hidden}
+  /* ---------- INVISIBLE SWISS GRID (shared by every slide) ----------
+     --mx  : left/right margin column (all left/right edges snap here)
+     --top : top line where the eyebrow row sits
+     --foot: footer baseline from the bottom
+     Cover + events flow from the same top line; the footer sits on the same
+     baseline; the word slide centers on the same column. */
+  .mmframe{--mx:6.25cqw;--top:12cqh;--gut:3cqh;--foot:6.5cqh}
+  .mmframe .s{position:absolute;inset:0}
+  /* word slides — single word, centered on the grid's vertical axis, within margins */
+  .mmframe .s.word{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 var(--mx)}
+  .mmframe .s.word .ww{font-size:clamp(24px,4.6cqw,78px);font-weight:400;letter-spacing:-.02em}
+  /* cover + events share the grid: top line, margins, footer baseline */
+  .mmframe .s.cover,.mmframe .s.events{display:flex;flex-direction:column;align-items:flex-start;
+    padding:var(--top) var(--mx) calc(var(--foot) + 9cqh)}
+  .mmframe .eyebrow{order:-1;align-self:stretch;text-align:right;margin:0 0 var(--gut);
+    font-size:clamp(8px,1cqw,15px);font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#8a877e;line-height:1.8;min-height:1.8em}
+  .mmframe .s.cover h1,.mmframe .s.events h1{margin:0;font-weight:400;line-height:1.06;letter-spacing:-.03em}
+  .mmframe .s.cover h1{font-size:clamp(28px,5cqw,92px);max-width:78cqw}
+  /* welcome sense-flow — sits on the grid directly under the headline */
+  .mmframe .mmflow{display:flex;gap:1.4cqw;align-items:center;flex-wrap:wrap;margin-top:var(--gut)}
+  .mmframe .mmflow .fstep{border:1px solid #1a1f2a40;background:transparent;border-radius:999px;
+    padding:.9cqh 1.9cqw;font-size:clamp(11px,1.5cqw,23px);font-weight:500;white-space:nowrap}
+  .mmframe .mmflow .farr{color:#8a877e;font-size:clamp(12px,1.7cqw,26px)}
+  /* footer — same baseline & alignment on every slide that carries it */
+  .mmframe .foot{position:absolute;left:var(--mx);bottom:var(--foot);display:flex;align-items:center;gap:1.6cqw}
+  .mmframe .foot .logo{height:clamp(20px,4.4cqh,50px);width:auto;display:block}
+  .mmframe .foot .byline{font-size:clamp(6px,.78cqw,12px);letter-spacing:.1em;color:#8a877e;text-transform:uppercase}
+  /* events / invitation slide */
+  .mmframe .s.events h1{font-size:clamp(24px,4.4cqw,76px)}
+  .mmframe .s.events .evlist{list-style:none;margin:var(--gut) 0 0;padding:0;align-self:stretch;max-width:none}
+  .mmframe .s.events .evlist li{display:grid;grid-template-columns:1fr auto 14cqw;align-items:baseline;gap:3cqw;
+    padding:1.3cqh 0;border-bottom:1px solid #1a1f2a1f;font-size:clamp(11px,1.35cqw,23px)}
+  .mmframe .s.events .evhead{font-size:clamp(8px,.92cqw,14px);letter-spacing:.1em;text-transform:uppercase;color:#8a877e;border-bottom:1px solid #1a1f2a33}
+  .mmframe .s.events .evname{font-weight:500}
+  .mmframe .s.events .evwhen{color:#6b685f;font-size:clamp(10px,1.1cqw,18px)}
+  .mmframe .s.events .evmark{text-align:right;font-size:clamp(10px,1.1cqw,18px)}
+  .mmframe .s.events .evhead .evmark,.mmframe .s.events .evhead .evwhen{color:#8a877e;font-size:inherit}
+  .mmframe .s.events li .evmark.yes{color:#3b6ea5;font-weight:700}
+  .mmframe .s.events li .evmark.free{color:#8a877e;font-style:italic}
+  .mmframe .s.events .evnote{margin-top:2.6cqh;font-size:clamp(9px,1.1cqw,17px);color:#8a877e}
+  .mmframe .s.events .foot{position:absolute;left:6.25cqw;bottom:5.5cqh;display:flex;align-items:center;gap:1.6cqw}
+  .mmframe .s.events .logo{height:clamp(18px,4cqh,46px);width:auto;display:block}
+  .mmframe .s.events .byline{font-size:clamp(6px,.78cqw,12px);letter-spacing:.1em;color:#8a877e;text-transform:uppercase}
+`;
+const STUDENT_PAGE_CSS = `html,body{margin:0;height:100%;overflow:hidden;background:#FAF9F5}`;
+
+/* ---------- LIVE EVENT DATA (shared site-data.json, same system as the website) ----------
+   Fills any [data-snb="dotted.path"] from the live file; baked text is the fallback. */
+const SNB_SRC="https://raw.githubusercontent.com/justinlmft/stucknotbroken/main/site-data.json";
+let SNB_DATA=null;
+function snbGet(o,p){ return p.split('.').reduce((a,k)=>(a&&a[k]!=null)?a[k]:undefined,o); }
+function applySNB(root){
+  if(!SNB_DATA||!root) return;
+  root.querySelectorAll('[data-snb]').forEach(n=>{
+    const v=snbGet(SNB_DATA,n.getAttribute('data-snb'));
+    if(typeof v==='string'||typeof v==='number') n.textContent=v;
+  });
+}
+function fetchSNB(){
+  try{
+    const c=('AbortController' in window)?new AbortController():null;
+    const t=c?setTimeout(()=>c.abort(),6000):null;
+    fetch(SNB_SRC,c?{signal:c.signal,cache:'no-store'}:{cache:'no-store'})
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(d=>{ if(t)clearTimeout(t); SNB_DATA=d; applySNB(document); })
+      .catch(()=>{ /* keep baked fallbacks */ });
+  }catch(e){ /* keep baked fallbacks */ }
+}
+
+/* ---------- CONTROLS ---------- */
+function senseChips(){
+  const el=document.getElementById("senseOpts"); el.innerHTML="";
+  Object.keys(SENSES).forEach(k=>{
+    const idx=st.order.indexOf(k), on=idx>=0;
+    const d=document.createElement("div");
+    d.className="opt"+(on?" sel":"");
+    d.innerHTML=(on?'<span class="ord">'+(idx+1)+'</span>':"")+cap(k);
+    d.onclick=()=>{ toggleSense(k); };
+    el.appendChild(d);
+  });
+}
+function toggleSense(k){
+  const i=st.order.indexOf(k);
+  if(i>=0) st.order.splice(i,1); else st.order.push(k);
+  render();
+}
+function clearSenses(){ st.order=[]; render(); }
+
+/* ---------- RANDOMIZE ---------- */
+function randomize(){
+  const keys=Object.keys(SENSES);
+  for(let i=keys.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [keys[i],keys[j]]=[keys[j],keys[i]]; }
+  const n=3+Math.floor(Math.random()*2); // 3 or 4 senses
+  st.order=keys.slice(0,n);
+  render();
+}
+
+/* ---------- BUILDER VIEW ---------- */
+let curTab="practice";
+function slidesHTML(beats){
+  let html="";
+  beats.forEach(b=>{
+    const cls="slide "+(b.fixed?"fixedc":"");
+    const tag=(b.fixed?"Fixed arc":"Varies with dials")+" · "+b.style;
+    const head=b.h.replace(/<br>/g," ");
+    html+='<div class="'+cls+'"><div class="tag">'+tag+'</div>'+
+      '<p class="stu">'+head+(b.eyebrow?' <span style="color:var(--muted);font-weight:400;font-size:12px">· '+b.eyebrow.replace(/<br>/g," ")+'</span>':"")+'</p>'+
+      (b.note?'<p class="note"><b>presenter notes</b> &nbsp;'+b.note+'</p>':'<p class="note" style="color:var(--muted)">— (lots of quiet) —</p>')+
+      '</div>';
+  });
+  return html;
+}
+function render(){
+  // sync simple controls
+  document.getElementById("tBreath").checked=st.breathEach;
+  document.getElementById("tAck").checked=st.acknowledge;
+  document.getElementById("tMove").checked=st.closeMove;
+  document.getElementById("tKind").checked=st.kindness;
+  senseChips();
+
+  document.getElementById("sName").textContent=sessionName();
+  const agenda = (st.order.length?st.order.map(cap):["—"]);
+  document.getElementById("sAgenda").innerHTML=
+    agenda.map((n,i)=>'<span class="step"><span class="num">'+(i+1)+'</span>'+n+'</span>')
+    .join('<span class="arr">→</span>');
+
+  const beats=buildBeats();
+  document.getElementById("slideCount").textContent=beats.length+" slides total";
+  const tabsEl=document.getElementById("tabs"); tabsEl.innerHTML="";
+  Object.keys(TABS).forEach(k=>{
+    const d=document.createElement("div");
+    d.className="tab"+(curTab===k?" sel":"");
+    d.innerHTML=TABS[k];
+    d.onclick=()=>{ curTab=k; render(); };
+    tabsEl.appendChild(d);
+  });
+  document.getElementById("slidesView").innerHTML=slidesHTML(beats.filter(b=>b.section===curTab));
+  applySNB(document.getElementById("slidesView"));
+}
+window.addEventListener("beforeprint",()=>{ if(!IS_STUDENT) document.getElementById("slidesView").innerHTML=slidesHTML(buildBeats()); });
+window.addEventListener("afterprint",()=>{ if(!IS_STUDENT) render(); });
+
+/* ---------- PRESENT: student window + presenter console ---------- */
+const IS_STUDENT = /[?&]student=1/.test(location.search);
+let pSlides=[], pIdx=0, sw=null;
+function studentURL(){ return location.href.split("#")[0].split("?")[0]+"?student=1"; }
+function openStudentWindow(){
+  sw=window.open(studentURL(),"mm_student","width=1280,height=800");
+  if(!sw){ alert("Pop-up blocked — allow pop-ups for this file so the student window can open."); return false; }
+  return true;
+}
+window.addEventListener("message",e=>{
+  const d=e.data||{};
+  if(IS_STUDENT){
+    if(d.mmSlide!==undefined){ const f=document.getElementById("frame"); if(f){ f.innerHTML=d.mmSlide; applySNB(f); } }
+    return;
+  }
+  if(d.mmReady) pRender();
+  else if(d.mmNav===1) pNext();
+  else if(d.mmNav===-1) pPrev();
+});
+function bootStudent(){
+  document.title="Mindful Moment — Slides";
+  const css=document.createElement("style"); css.textContent=STUDENT_PAGE_CSS+STUDENT_CSS;
+  document.head.appendChild(css);
+  document.body.innerHTML='<div class="mmframe" id="frame"></div>';
+  document.addEventListener("keydown",e=>{
+    if(!window.opener)return;
+    if(e.key==="ArrowRight"||e.key===" ")window.opener.postMessage({mmNav:1},"*");
+    else if(e.key==="ArrowLeft")window.opener.postMessage({mmNav:-1},"*");
+  });
+  if(window.opener)window.opener.postMessage({mmReady:1},"*");
+  fetchSNB();
+}
+function fmtNote(n){
+  if(!n) return "";
+  let html="";
+  n.split(/<br>| — /).forEach(part=>{
+    part=part.trim(); if(!part) return;
+    const qs=part.match(/[^?]+\?/g);
+    const onlyQs=qs && qs.join("").replace(/\s/g,"")===part.replace(/\s/g,"");
+    if(qs && qs.length>1 && onlyQs && qs.every(q=>q.trim().length<48)){
+      html+='<ul>'+qs.map(q=>'<li>'+q.trim()+'</li>').join("")+'</ul>';
+    } else {
+      html+='<p>'+part+'</p>';
+    }
+  });
+  return html;
+}
+function pRender(){
+  if(!pSlides.length)return;
+  const b=pSlides[pIdx];
+  if(sw && !sw.closed) sw.postMessage({mmSlide:studentSlideHTML(b)},"*");
+  document.getElementById("pvBox").innerHTML='<div class="mmframe">'+studentSlideHTML(b)+'</div>';
+  applySNB(document.getElementById("pvBox"));
+  document.getElementById("cNotes").innerHTML=fmtNote(b.note);
+  const nxt=pSlides[pIdx+1];
+  document.getElementById("cNext").innerHTML=nxt?("Next: <b>"+nxt.h.replace(/<br>/g," ")+"</b>"):"Next: — end of session —";
+  document.getElementById("pCount").textContent=(pIdx+1)+" / "+pSlides.length;
+}
+function startPresent(){
+  if(!openStudentWindow())return;
+  pSlides=buildBeats();
+  pIdx=Math.max(0,pSlides.findIndex(b=>b.section===curTab));
+  document.getElementById("console").classList.add("on");
+  pRender();
+}
+function endPresent(){
+  document.getElementById("console").classList.remove("on");
+  if(sw && !sw.closed) sw.close();
+  sw=null;
+}
+function pNext(e){ if(e)e.stopPropagation(); if(pIdx<pSlides.length-1){pIdx++;pRender();} }
+function pPrev(e){ if(e)e.stopPropagation(); if(pIdx>0){pIdx--;pRender();} }
+document.addEventListener("keydown",e=>{
+  if(IS_STUDENT)return;
+  const c=document.getElementById("console");
+  if(!c||!c.classList.contains("on"))return;
+  if(e.key==="ArrowRight"||e.key===" ")pNext();
+  else if(e.key==="ArrowLeft")pPrev();
+  else if(e.key==="Escape")endPresent();
+});
+
+/* ---------- DRAGGABLE LEFT MENU ---------- */
+(function(){
+  const sp=document.getElementById("splitter");
+  if(!sp) return;
+  const dials=document.querySelector(".dials");
+  let dragging=false;
+  sp.addEventListener("pointerdown",e=>{
+    dragging=true; sp.classList.add("dragging"); sp.setPointerCapture(e.pointerId);
+    document.body.style.userSelect="none";
+  });
+  sp.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    const w=Math.max(260, Math.min(560, e.clientX - dials.getBoundingClientRect().left));
+    dials.style.flex="0 0 "+w+"px"; dials.style.width=w+"px";
+  });
+  const stop=()=>{ dragging=false; sp.classList.remove("dragging"); document.body.style.userSelect=""; };
+  sp.addEventListener("pointerup",stop); sp.addEventListener("pointercancel",stop);
+})();
+
+if(IS_STUDENT){ bootStudent(); }
+else {
+  const css=document.createElement("style"); css.textContent=STUDENT_CSS; // console preview
+  document.head.appendChild(css);
+  render();
+  fetchSNB();
+}
+</script>
+</body>
+</html>
