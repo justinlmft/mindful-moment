@@ -123,6 +123,13 @@
       <label class="toggle"><input type="checkbox" id="tKind" onchange="st.kindness=this.checked;render()" checked> Kindness slide (close)</label>
     </div>
 
+    <div class="dial sep">
+      <label class="h">Practice scene</label>
+      <p class="sub">The living backdrop from the app, behind the practice words. Subtle, and it honors Reduce Motion.</p>
+      <div class="opts" id="sceneOpts"></div>
+      <p class="sub" id="sceneCap" style="margin:10px 0 0"></p>
+    </div>
+
     <div class="randbar">
       <button class="btn" style="width:100%" onclick="randomize()">🎲 Randomize senses & order</button>
       <button class="btn ghost" style="width:100%" onclick="clearSenses()">Clear senses</button>
@@ -197,7 +204,8 @@ let st = {
   breathEach:true,
   acknowledge:true,
   closeMove:true,
-  kindness:true
+  kindness:true,
+  scene:"cycle"                       // '' surprise me · 'cycle' one per practice slide · or a named scene
 };
 
 /* ---------- BEAT MODEL ----------
@@ -317,11 +325,16 @@ const STUDENT_CSS = `
      --foot: footer baseline from the bottom
      Cover + events flow from the same top line; the footer sits on the same
      baseline; the word slide centers on the same column. */
-  .mmframe{--mx:6.25cqw;--top:12cqh;--gut:3cqh;--foot:6.5cqh}
+  .mmframe{--mx:6.25cqw;--top:12cqh;--gut:3cqh;--foot:6.5cqh;--veil:rgba(250,249,245,.70)}
   .mmframe .s{position:absolute;inset:0}
-  /* word slides — single word, centered on the grid's vertical axis, within margins */
-  .mmframe .s.word{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 var(--mx)}
-  .mmframe .s.word .ww{font-size:clamp(24px,4.6cqw,78px);font-weight:400;letter-spacing:-.02em}
+  /* word slides — single word, resting in a calm lower clearing so it doesn't sit
+     in the busiest part of the scene (the animation breathes in the open space above).
+     A soft radial veil behind the word keeps it legible over any scene, light or dark. */
+  .mmframe .s.word{display:flex;align-items:flex-end;justify-content:center;text-align:center;padding:0 var(--mx) 30cqh}
+  .mmframe .s.word .ww{font-size:clamp(24px,4.6cqw,78px);font-weight:400;letter-spacing:-.02em;position:relative;isolation:isolate}
+  .mmframe .s.word .ww::before{content:"";position:absolute;z-index:-1;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:190%;height:440%;border-radius:50%;pointer-events:none;
+    background:radial-gradient(ellipse at center,var(--veil) 0%,var(--veil) 30%,transparent 72%)}
   /* cover + events share the grid: top line, margins, footer baseline */
   .mmframe .s.cover,.mmframe .s.events{display:flex;flex-direction:column;align-items:flex-start;
     padding:var(--top) var(--mx) calc(var(--foot) + 9cqh)}
@@ -354,6 +367,23 @@ const STUDENT_CSS = `
   .mmframe .s.events .foot{position:absolute;left:6.25cqw;bottom:5.5cqh;display:flex;align-items:center;gap:1.6cqw}
   .mmframe .s.events .logo{height:clamp(18px,4cqh,46px);width:auto;display:block}
   .mmframe .s.events .byline{font-size:clamp(6px,.78cqw,12px);letter-spacing:.1em;color:#8a877e;text-transform:uppercase}
+  /* ---------- LIVE SCENE (ported from the SNB app player) ----------
+     A calm canvas backdrop that lives BEHIND the swapped slide content, so it
+     survives slide changes. Only shown on word (practice) slides. The two
+     light-based scenes (sunbeam/fireflies) come with a dark field, exactly as
+     in the app. Everything eases with the SNB curve; reduced-motion holds still. */
+  .mmframe{transition:background-color .7s cubic-bezier(.22,1,.36,1)}
+  .mmframe .mmscene{position:absolute;inset:0;width:100%;height:100%;display:block;
+    pointer-events:none;z-index:0;opacity:1}
+  .mmframe .mmslidebox{position:absolute;inset:0;z-index:1;opacity:1;
+    transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1)}
+  .mmframe .mmslidebox.mm-enter{opacity:0;transform:translateY(9px)}
+  .mmframe.dark{background:#1a1f2a;color:#FAF9F5;--veil:rgba(26,31,42,.72)}
+  .mmframe.dark .s.word .ww{color:#FAF9F5}
+  @media (prefers-reduced-motion:reduce){
+    .mmframe .mmslidebox{transition:none}
+    .mmframe.dark,.mmframe{transition:none}
+  }
 `;
 const STUDENT_PAGE_CSS = `html,body{margin:0;height:100%;overflow:hidden;background:#FAF9F5}`;
 
@@ -430,6 +460,7 @@ function render(){
   document.getElementById("tMove").checked=st.closeMove;
   document.getElementById("tKind").checked=st.kindness;
   senseChips();
+  sceneChips();
 
   document.getElementById("sName").textContent=sessionName();
   const agenda = (st.order.length?st.order.map(cap):["—"]);
@@ -453,6 +484,149 @@ function render(){
 window.addEventListener("beforeprint",()=>{ if(!IS_STUDENT) document.getElementById("slidesView").innerHTML=slidesHTML(buildBeats()); });
 window.addEventListener("afterprint",()=>{ if(!IS_STUDENT) render(); });
 
+/* ============================================================
+   LIVE SCENES — ported from the SNB app player (player.html).
+   Same seven scenes, same felt behaviour: no cycle a nervous
+   system can lock onto. Simplified for the presenter — one calm
+   colour, ink on bone; the two light scenes (sunbeam/fireflies)
+   run gold/bone on a dark field, exactly as in the app. Shown
+   only behind the practice word slides. Reduced-motion holds still.
+   ============================================================ */
+const MM_SCENES=['circles','drift','pond','reeds','breeze','sunbeam','fireflies'];
+const MM_DARK={sunbeam:1,fireflies:1};   // light phenomena need a dark field (as in the app)
+const SCENE_CAP={
+  '':'a different scene each session, chosen at random when you present.',
+  cycle:'a different scene on each practice word, so every one appears.',
+  circles:'a slow breathing circle, the app’s pacer.',
+  drift:'soft specks drifting upward, each at its own pace.',
+  pond:'still water, a ripple now and then.',
+  reeds:'reeds swaying in an uneven breeze.',
+  breeze:'strands carried sideways on a light wind, each at its own speed.',
+  sunbeam:'a still beam of light, dust hanging in it. dims the slide.',
+  fireflies:'small lights arriving and leaving on their own time. dims the slide.'
+};
+function sceneChips(){
+  const el=document.getElementById('sceneOpts'); if(!el) return; el.innerHTML='';
+  const opts=[['','surprise me'],['cycle','cycle all']].concat(MM_SCENES.map(s=>[s,s]));
+  opts.forEach(([val,label])=>{
+    const d=document.createElement('div');
+    d.className='opt'+(st.scene===val?' sel':'');
+    d.textContent=label;
+    d.onclick=()=>{ st.scene=val; sceneChips(); };
+    el.appendChild(d);
+  });
+  const c=document.getElementById('sceneCap'); if(c)c.textContent=SCENE_CAP[st.scene]||'';
+}
+
+/* one engine per canvas (the student window + the presenter preview each get one) */
+function makeSceneEngine(canvas){
+  const g=canvas.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let scene='circles', active=false, vis=0;
+  let motes=[],reeds=[],rips=[],strands=[],dust=[],flies=[],ripNext=0,sT=0,sLast=0,raf=null,seeded=false;
+  const INK=[26,31,42], BONE=[250,249,245];
+  function fit(){ const dpr=devicePixelRatio||1, w=canvas.clientWidth||1, h=canvas.clientHeight||1;
+    canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr); g.setTransform(dpr,0,0,dpr,0,0); }
+  function seed(){
+    motes=[];reeds=[];rips=[];strands=[];dust=[];flies=[];ripNext=0;sT=0;sLast=0;
+    for(let i=0;i<9;i++)motes.push({x:Math.random(),y:Math.random(),r:1.5+Math.random()*3.5,v:(3.5+Math.random()*8)/1000,dx:(Math.random()-.5)*.003,a:.18+Math.random()*.3});
+    for(let i=0;i<7;i++)reeds.push({x:.12+.76*(i/6)+(Math.random()-.5)*.05,h:.3+Math.random()*.34,per:8+Math.random()*8,ph:Math.random()*6.283,amp:.04+Math.random()*.04,w:1.4+Math.random()*1.2});
+    for(let i=0;i<7;i++)strands.push({y:.15+.7*(i/6)+(Math.random()-.5)*.06,len:.2+Math.random()*.22,sp:(28+Math.random()*46)/1000,x:Math.random()*1.4-.2,amp:2.5+Math.random()*4,ph:Math.random()*6.283,a:.22+Math.random()*.28});
+    for(let i=0;i<8;i++)dust.push({x:.36+Math.random()*.24,y:.12+Math.random()*.72,r:1+Math.random()*1.6,per:9+Math.random()*11,ph:Math.random()*6.283,ax:4+Math.random()*6,ay:8+Math.random()*9,a:.35+Math.random()*.25});
+    for(let i=0;i<7;i++)flies.push({x:.12+.76*(i/6)+(Math.random()-.5)*.09,y:.15+Math.random()*.62,per:5.5+Math.random()*6.5,ph:Math.random()*10,wx:8+Math.random()*9,wy:6+Math.random()*8});
+    seeded=true;
+  }
+  function set(sc){ if(sc && sc!==scene){ scene=sc; seed(); } }
+  function show(on){ active=!!on; }
+  function draw(){
+    const W=canvas.clientWidth,H=canvas.clientHeight; g.clearRect(0,0,W,H);
+    vis += ((active?1:0)-vis)*0.08; if(vis<0.01) return;
+    if(!seeded) seed();
+    const t=performance.now()/1000, dt=Math.min(.05,Math.max(0,t-sLast)); sLast=t; if(!reduce) sT+=dt;
+    const unit=Math.min(Math.min(W,H),430), dark=!!MM_DARK[scene], base=dark?BONE:INK, fade=vis;
+    const col=a=>'rgba('+base[0]+','+base[1]+','+base[2]+','+(a*fade)+')';
+    if(scene==='drift'){
+      motes.forEach(m=>{ if(!reduce){ m.y-=m.v*dt*3; m.x+=m.dx*dt*3; if(m.y<-.05){ m.y=1.05; m.x=Math.random(); } }
+        g.strokeStyle=col(m.a); g.lineWidth=1.3; g.beginPath();g.arc(m.x*W,m.y*H,m.r*(unit/300+.6),0,6.283);g.stroke(); });
+    } else if(scene==='pond'){
+      if(!reduce&&sT>=ripNext){ rips.push({x:.2+Math.random()*.6,y:.25+Math.random()*.5,b:sT}); ripNext=sT+4+Math.random()*5; if(rips.length>4)rips.shift(); }
+      rips.forEach(rp=>{ const age=sT-rp.b, life=6; if(age>life) return; const p=age/life, R=unit*(.06+.42*p),
+        aOut=(p<.08?p/.08:Math.max(0,1-((p-.08)/.57)))*.5, aIn=(p<.08?p/.08:1-((p-.08)/.92))*.5;
+        g.lineWidth=1.5; g.strokeStyle=col(aOut); g.beginPath();g.arc(rp.x*W,rp.y*H,R,0,6.283);g.stroke();
+        g.strokeStyle=col(aIn); g.beginPath();g.arc(rp.x*W,rp.y*H,R*.62,0,6.283);g.stroke(); });
+    } else if(scene==='reeds'){
+      reeds.forEach(rd=>{ const sw=Math.sin(sT*6.283/rd.per+rd.ph)*rd.amp, bx=rd.x*W, by=H, hh=rd.h*H, tx=bx+sw*hh, ty=by-hh;
+        g.strokeStyle=col(.5); g.lineWidth=rd.w; g.lineCap='round';
+        g.beginPath(); g.moveTo(bx,by); g.quadraticCurveTo(bx+sw*hh*.25, by-hh*.55, tx, ty); g.stroke(); });
+    } else if(scene==='breeze'){
+      strands.forEach(s=>{ if(!reduce){ s.x+=s.sp*dt; if(s.x>1.15){ s.x=-.35; s.y=.15+Math.random()*.7; } }
+        const y0=s.y*H, x0=s.x*W, L=s.len*W; g.strokeStyle=col(s.a); g.lineWidth=1.6; g.lineCap='round';
+        g.beginPath(); g.moveTo(x0,y0); g.lineTo(x0+L,y0); g.stroke(); });
+    } else if(scene==='sunbeam'){
+      const AMBER=a=>'rgba(246,228,180,'+(a*fade)+')', bw=W*.34, grd=g.createLinearGradient(0,-H,0,H);
+      grd.addColorStop(0,AMBER(.30)); grd.addColorStop(1,AMBER(.04));
+      g.save(); g.translate(W*.5,H*.5); g.rotate(.3); g.fillStyle=grd; g.fillRect(-bw/2,-H*1.2,bw,H*2.4); g.restore();
+      dust.forEach(d=>{ const px=(d.x*W)+Math.sin(sT*6.283/d.per+d.ph)*d.ax, py=(d.y*H)+Math.cos(sT*6.283/(d.per*1.3)+d.ph)*d.ay;
+        g.fillStyle='rgba(26,31,42,'+(Math.min(1,.5+d.a)*fade)+')'; g.beginPath();g.arc(px,py,d.r,0,6.283);g.fill(); });
+    } else if(scene==='fireflies'){
+      const B2=a=>'rgba(250,249,245,'+(a*fade)+')';
+      flies.forEach(f=>{ const p=((sT+f.ph)%f.per)/f.per, tw=Math.sin(p*Math.PI),
+        px=(f.x*W)+Math.sin(sT*6.283/(f.per*2.1)+f.ph)*f.wx, py=(f.y*H)+Math.cos(sT*6.283/(f.per*1.7)+f.ph)*f.wy;
+        g.fillStyle=B2(.12*tw); g.beginPath();g.arc(px,py,7,0,6.283);g.fill();
+        g.fillStyle=B2(.3*tw);  g.beginPath();g.arc(px,py,4,0,6.283);g.fill();
+        g.fillStyle=B2(.85*tw); g.beginPath();g.arc(px,py,2.2,0,6.283);g.fill(); });
+    } else { /* circles — a single slow breathing ring, the app’s pacer */
+      const cx=W/2, cy=H/2, breath=reduce?0.5:(Math.sin(sT*0.55)*0.5+0.5), dotR=Math.max(2.5,unit*0.02), breathR=unit*(0.20+0.12*breath);
+      g.lineCap='round'; g.strokeStyle=col(0.9); g.lineWidth=2.5; g.beginPath();g.arc(cx,cy,breathR,0,6.283);g.stroke();
+      g.fillStyle=col(0.82); g.beginPath();g.arc(cx,cy,dotR,0,6.283);g.fill();
+    }
+  }
+  function loop(){ raf=requestAnimationFrame(loop);
+    const d=devicePixelRatio||1;
+    if(Math.round(canvas.clientWidth*d)!==canvas.width||Math.round(canvas.clientHeight*d)!==canvas.height) fit();
+    draw();
+  }
+  function start(){ if(!raf){ fit(); loop(); } }
+  function stop(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
+  addEventListener('resize',fit);
+  return {set,show,start,stop,fit};
+}
+
+/* per-session scene assignment (stable across prev/next) */
+let sceneMap=[], _sessionScene='circles';
+function buildSceneMap(){
+  _sessionScene=MM_SCENES[Math.floor(Math.random()*MM_SCENES.length)];
+  let wc=0;
+  sceneMap=pSlides.map(b=>{
+    if(b.style!=='word') return null;
+    let s;
+    if(st.scene==='cycle') s=MM_SCENES[wc%MM_SCENES.length];
+    else if(st.scene && st.scene!=='') s=st.scene;
+    else s=_sessionScene;
+    wc++; return s;
+  });
+}
+function sceneMeta(i){ const b=pSlides[i], sc=sceneMap[i]; return {word:!!(b&&b.style==='word'), scene:sc||'circles', dark:!!(sc&&MM_DARK[sc])}; }
+
+/* paint one slide into a frame: set the scene, dim if needed, gently swap the words */
+function paintSlide(mmframeEl, boxEl, engine, html, meta){
+  meta=meta||{};
+  if(engine){ if(meta.word){ engine.set(meta.scene||'circles'); engine.show(true); } else { engine.show(false); } }
+  if(mmframeEl) mmframeEl.classList.toggle('dark', !!(meta.word && meta.dark));
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ boxEl.innerHTML=html; applySNB(boxEl); return; }
+  const OUT=240, IN=440;
+  boxEl.style.transition='opacity '+OUT+'ms cubic-bezier(.4,0,.2,1),transform '+OUT+'ms cubic-bezier(.4,0,.2,1)';
+  boxEl.style.opacity='0'; boxEl.style.transform='translateY(-6px)';
+  setTimeout(()=>{
+    boxEl.innerHTML=html; applySNB(boxEl);
+    boxEl.style.transition='none'; boxEl.style.transform='translateY(9px)';
+    requestAnimationFrame(()=>{
+      boxEl.style.transition='opacity '+IN+'ms cubic-bezier(.22,1,.36,1),transform '+IN+'ms cubic-bezier(.22,1,.36,1)';
+      boxEl.style.opacity='1'; boxEl.style.transform='none';
+    });
+  }, OUT);
+}
+
 /* ---------- PRESENT: student window + presenter console ---------- */
 const IS_STUDENT = /[?&]student=1/.test(location.search);
 let pSlides=[], pIdx=0, sw=null;
@@ -465,7 +639,10 @@ function openStudentWindow(){
 window.addEventListener("message",e=>{
   const d=e.data||{};
   if(IS_STUDENT){
-    if(d.mmSlide!==undefined){ const f=document.getElementById("frame"); if(f){ f.innerHTML=d.mmSlide; applySNB(f); } }
+    if(d.mmSlide!==undefined){
+      const box=document.getElementById("frame"), mf=document.getElementById("mmframe");
+      if(box) paintSlide(mf, box, window.__mmEngine, d.mmSlide, d.mmMeta||{});
+    }
     return;
   }
   if(d.mmReady) pRender();
@@ -476,7 +653,9 @@ function bootStudent(){
   document.title="Mindful Moment — Slides";
   const css=document.createElement("style"); css.textContent=STUDENT_PAGE_CSS+STUDENT_CSS;
   document.head.appendChild(css);
-  document.body.innerHTML='<div class="mmframe" id="frame"></div>';
+  document.body.innerHTML='<div class="mmframe" id="mmframe"><canvas class="mmscene" id="mmscene"></canvas><div class="mmslidebox" id="frame"></div></div>';
+  window.__mmEngine=makeSceneEngine(document.getElementById("mmscene"));
+  window.__mmEngine.start();
   document.addEventListener("keydown",e=>{
     if(!window.opener)return;
     if(e.key==="ArrowRight"||e.key===" ")window.opener.postMessage({mmNav:1},"*");
@@ -503,9 +682,10 @@ function fmtNote(n){
 function pRender(){
   if(!pSlides.length)return;
   const b=pSlides[pIdx];
-  if(sw && !sw.closed) sw.postMessage({mmSlide:studentSlideHTML(b)},"*");
-  document.getElementById("pvBox").innerHTML='<div class="mmframe">'+studentSlideHTML(b)+'</div>';
-  applySNB(document.getElementById("pvBox"));
+  const meta=sceneMeta(pIdx), html=studentSlideHTML(b);
+  if(sw && !sw.closed) sw.postMessage({mmSlide:html, mmMeta:meta},"*");
+  const pvSlide=document.getElementById("pvSlide"), pvFrame=document.getElementById("pvFrame");
+  if(pvSlide) paintSlide(pvFrame, pvSlide, window.__mmPreview, html, meta);
   document.getElementById("cNotes").innerHTML=fmtNote(b.note);
   const nxt=pSlides[pIdx+1];
   document.getElementById("cNext").innerHTML=nxt?("Next: <b>"+nxt.h.replace(/<br>/g," ")+"</b>"):"Next: — end of session —";
@@ -514,12 +694,20 @@ function pRender(){
 function startPresent(){
   if(!openStudentWindow())return;
   pSlides=buildBeats();
+  buildSceneMap();
   pIdx=Math.max(0,pSlides.findIndex(b=>b.section===curTab));
   document.getElementById("console").classList.add("on");
+  // persistent preview structure (canvas survives slide swaps) + its own engine
+  document.getElementById("pvBox").innerHTML=
+    '<div class="mmframe" id="pvFrame"><canvas class="mmscene" id="pvScene"></canvas><div class="mmslidebox" id="pvSlide"></div></div>';
+  if(window.__mmPreview) window.__mmPreview.stop();
+  window.__mmPreview=makeSceneEngine(document.getElementById("pvScene"));
+  window.__mmPreview.start();
   pRender();
 }
 function endPresent(){
   document.getElementById("console").classList.remove("on");
+  if(window.__mmPreview){ window.__mmPreview.stop(); window.__mmPreview=null; }
   if(sw && !sw.closed) sw.close();
   sw=null;
 }
