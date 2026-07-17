@@ -205,7 +205,7 @@ let st = {
   acknowledge:true,
   closeMove:true,
   kindness:true,
-  scene:"cycle"                       // '' surprise me · 'cycle' one per practice slide · or a named scene
+  scene:""                            // '' surprise me (random per session) · or a named scene
 };
 
 /* ---------- BEAT MODEL ----------
@@ -496,7 +496,6 @@ const MM_SCENES=['circles','drift','pond','reeds','breeze','sunbeam','fireflies'
 const MM_DARK={sunbeam:1,fireflies:1};   // light phenomena need a dark field (as in the app)
 const SCENE_CAP={
   '':'a different scene each session, chosen at random when you present.',
-  cycle:'a different scene on each practice word, so every one appears.',
   circles:'a slow breathing circle, the app’s pacer.',
   drift:'soft specks drifting upward, each at its own pace.',
   pond:'still water, a ripple now and then.',
@@ -507,7 +506,7 @@ const SCENE_CAP={
 };
 function sceneChips(){
   const el=document.getElementById('sceneOpts'); if(!el) return; el.innerHTML='';
-  const opts=[['','surprise me'],['cycle','cycle all']].concat(MM_SCENES.map(s=>[s,s]));
+  const opts=[['','surprise me']].concat(MM_SCENES.map(s=>[s,s]));
   opts.forEach(([val,label])=>{
     const d=document.createElement('div');
     d.className='opt'+(st.scene===val?' sel':'');
@@ -600,10 +599,9 @@ function buildSceneMap(){
   sceneMap=pSlides.map(b=>{
     if(b.style!=='word') return null;
     let s;
-    if(st.scene==='cycle') s=MM_SCENES[wc%MM_SCENES.length];
-    else if(st.scene && st.scene!=='') s=st.scene;
+    if(st.scene) s=st.scene;
     else s=_sessionScene;
-    wc++; return s;
+    return s;
   });
 }
 function sceneMeta(i){ const b=pSlides[i], sc=sceneMap[i]; return {word:!!(b&&b.style==='word'), scene:sc||'circles', dark:!!(sc&&MM_DARK[sc])}; }
