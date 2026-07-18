@@ -2483,12 +2483,11 @@ var qrcode = function() {
 /* The five sense pathways (CB anchor entries, kept MM-simple). */
 /* ==== LIVE CHECK-IN (Phase 1: Mindful Moment) — added 2026-07-18 ====
    Publishes the session at Present and stamps the seam on each slide change,
-   so the SNB app drives its own before/after check-in. STAGING while testing;
-   at go-live swap SNB_LIVE.fnBase + appBase to prod (comments below). */
+   so the SNB app drives its own before/after check-in. LIVE on prod since 2026-07-18. */
 const SNB_LIVE = {
-  fnBase: "https://qzwpktrzfswhcprrjysz.supabase.co/functions/v1", /* STAGING; go-live: https://piutnzwpbrydyipwaocl.supabase.co/functions/v1 */
-  anon:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6d3BrdHJ6ZnN3aGNwcnJqeXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MzQ4OTQsImV4cCI6MjA5OTMxMDg5NH0.3v0SVI4ROr9LT9fywwfR2c5OP83butDvNgk2FGeBLn0", /* STAGING anon, public by design */
-  appBase:"https://beta.stucknotbroken.com" /* go-live: https://app.stucknotbroken.com */
+  fnBase: "https://piutnzwpbrydyipwaocl.supabase.co/functions/v1", /* PROD */
+  anon:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpdXRuendwYnJ5ZHlpcHdhb2NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNjEzMzcsImV4cCI6MjA5NzgzNzMzN30.sWJQ--a6-Wdodud6StMzfU_wwSCeUT-ThSRiOxbJ0uU", /* PROD anon, public by design */
+  appBase:"https://app.stucknotbroken.com" /* PROD */
 };
 const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mindful moment together right now." };
 const BEFORE_BODY="open the stuck not broken app and check-in before the practice.";
@@ -3001,14 +3000,18 @@ function paintSlide(mmframeEl, boxEl, engine, html, meta){
   if(mmframeEl) mmframeEl.classList.toggle('dark', !!(meta.word && meta.dark));
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ boxEl.innerHTML=html; applySNB(boxEl); return; }
   const OUT=240, IN=440;
-  boxEl.style.transition='opacity '+OUT+'ms cubic-bezier(.4,0,.2,1),transform '+OUT+'ms cubic-bezier(.4,0,.2,1)';
-  boxEl.style.opacity='0'; boxEl.style.transform='translateY(-6px)';
+  /* only the PRIMARY pieces animate in (headline, sense pills, the practice word,
+     the check-in body, the events list). The logo/footer and eyebrow stay put. */
+  const PRIMARY='h1, .mmflow, .ww, .cibody, .evlist, .evnote';
+  boxEl.querySelectorAll(PRIMARY).forEach(n=>{ n.style.transition='opacity '+OUT+'ms cubic-bezier(.4,0,.2,1),transform '+OUT+'ms cubic-bezier(.4,0,.2,1)'; n.style.opacity='0'; n.style.transform='translateY(-6px)'; });
+  
   setTimeout(()=>{
     boxEl.innerHTML=html; applySNB(boxEl);
-    boxEl.style.transition='none'; boxEl.style.transform='translateY(9px)';
+    const _pn=boxEl.querySelectorAll(PRIMARY);
+    _pn.forEach(n=>{ n.style.transition='none'; n.style.opacity='0'; n.style.transform='translateY(9px)'; });
     requestAnimationFrame(()=>{
-      boxEl.style.transition='opacity '+IN+'ms cubic-bezier(.22,1,.36,1),transform '+IN+'ms cubic-bezier(.22,1,.36,1)';
-      boxEl.style.opacity='1'; boxEl.style.transform='none';
+      _pn.forEach(n=>{ n.style.transition='opacity '+IN+'ms cubic-bezier(.22,1,.36,1),transform '+IN+'ms cubic-bezier(.22,1,.36,1)'; n.style.opacity='1'; n.style.transform='none'; });
+      
     });
   }, OUT);
 }
