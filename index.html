@@ -121,6 +121,7 @@
       <label class="toggle"><input type="checkbox" id="tAck" onchange="st.acknowledge=this.checked;render()" checked> Acknowledge slide (open)</label>
       <label class="toggle"><input type="checkbox" id="tMove" onchange="st.closeMove=this.checked;render()" checked> Move slide (close)</label>
       <label class="toggle"><input type="checkbox" id="tKind" onchange="st.kindness=this.checked;render()" checked> Kindness slide (close)</label>
+<label class="toggle" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><input type="checkbox" id="tTest" onchange="st.testMode=this.checked;render()"> 🧪 Test session <span style="color:var(--muted)">— the app popup says to ignore it</span></label>
     </div>
 
     <div class="dial sep">
@@ -2489,7 +2490,9 @@ const SNB_LIVE = {
   anon:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpdXRuendwYnJ5ZHlpcHdhb2NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNjEzMzcsImV4cCI6MjA5NzgzNzMzN30.sWJQ--a6-Wdodud6StMzfU_wwSCeUT-ThSRiOxbJ0uU", /* PROD anon, public by design */
   appBase:"https://app.stucknotbroken.com" /* PROD */
 };
-const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mindful moment together right now." };
+const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mindful moment together right now.",
+  /* used when the Test session toggle is on, so a real member who sees the popup knows to ignore it */
+  testHost:"test session (please ignore)", testInvite:"this is just a test of a new feature. nothing is happening live right now." };
 const BEFORE_BODY="open the stuck not broken app and check-in before the practice.";
 const AFTER_BODY="open the app and check-in again.";
 const BEFORE_NOTE="let's check in before we practice.<br>open the stuck not broken app. if you're not in yet, scan the code or tap the link on screen.<br>notice where you are right now. there's no right answer.<br>take your time.";
@@ -2508,7 +2511,7 @@ async function publishLive(){
   try{
     const recipe={ senses:st.order.slice(), scene:(st.scene||"(surprise me)"), shape:{breath_each:st.breathEach, acknowledge:st.acknowledge, close_move:st.closeMove, kindness:st.kindness} };
     const practices=[{ref:"mm", label:"Mindful Moment", checkins:["before","after"]}];
-    const j=await sbFn("publish-live-session",{type:"mindful-moment", recipe:recipe, practices:practices, duration_minutes:60, host:LIVE_COPY.host, invite:LIVE_COPY.invite});
+    const j=await sbFn("publish-live-session",{type:"mindful-moment", recipe:recipe, practices:practices, duration_minutes:60, host:(st.testMode?LIVE_COPY.testHost:LIVE_COPY.host), invite:(st.testMode?LIVE_COPY.testInvite:LIVE_COPY.invite)});
     LIVE={id:j.id, code:j.code, presenter_key:j.presenter_key};
     updateConsoleJoin(); pushJoin(); postSeamForCurrent();
   }catch(err){ showLiveError(err); }
@@ -2529,7 +2532,7 @@ function endLive(){
 }
 function updateConsoleJoin(){
   const el=document.getElementById("pJoin"); if(!el) return;
-  el.textContent = LIVE ? ("live · code "+LIVE.code+" · "+stripProto(liveJoinURL())) : "";
+  el.textContent = LIVE ? ((st.testMode?"🧪 TEST · ":"")+"live · code "+LIVE.code+" · "+stripProto(liveJoinURL())) : "";
 }
 function showLiveError(err){
   const el=document.getElementById("pJoin"); if(el) el.textContent="live check-in unavailable (the practice still runs)";
@@ -2566,6 +2569,7 @@ let st = {
   acknowledge:true,
   closeMove:true,
   kindness:true,
+  testMode:false,  // ON = the app popup tells members to ignore this session
   scene:""                            // '' surprise me (random per session) · or a named scene
 };
 
@@ -2846,6 +2850,7 @@ function render(){
   document.getElementById("tAck").checked=st.acknowledge;
   document.getElementById("tMove").checked=st.closeMove;
   document.getElementById("tKind").checked=st.kindness;
+  { const _t=document.getElementById("tTest"); if(_t) _t.checked=st.testMode; }
   senseChips();
   sceneChips();
 
