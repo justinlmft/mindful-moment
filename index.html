@@ -2621,15 +2621,16 @@ function buildBeats(){
     "There’s no pressure to participate. All you need to worry about is the present moment. — If you’d like to be more active and share an experience in the chat, go right ahead. Keep it very present-moment focused, following what we’re doing here."));
   B.push(cover("no pressure.<br>just presence.",
     "The motto for this is: no pressure, just presence. From here on, I’ll give a simple prompt and a few follow-ups. But mostly, lots of quiet. That’s really it. Sound good? Let’s begin."));
-  if(st.acknowledge){
-    B.push(word("acknowledge",
-      "As we begin, acknowledge what else you might be holding onto — a current or past context. Not going into details. Just acknowledge what else you have, and give yourself permission to also practice mindfulness. — These Mindful Moments aren’t dismissive of what else you have, and aren’t rejecting it. They create space to acknowledge it, and eventually pave the way for those other feelings when you’re ready — the deeper work of the Unstucking Academy. For now, we acknowledge, and give ourselves permission to also be more present."));
-  }
   sec("intro",0);
 
   /* PRACTICE (varies) */
   let m=B.length;
   B.push(checkinBeat("before"));
+  if(st.acknowledge){
+    B.push(word("acknowledge",
+      "As we begin, acknowledge what else you might be holding onto — a current or past context. Not going into details. Just acknowledge what else you have, and give yourself permission to also practice mindfulness. — These Mindful Moments aren’t dismissive of what else you have, and aren’t rejecting it. They create space to acknowledge it, and eventually pave the way for those other feelings when you’re ready — the deeper work of the Unstucking Academy. For now, we acknowledge, and give ourselves permission to also be more present."));
+  }
+  
   st.order.forEach(k=>{
     if(st.breathEach) B.push(word("breath",BREATH_NOTE));
     const s=SENSES[k];
@@ -2764,7 +2765,7 @@ const STUDENT_CSS = `
 .mmframe .mmjoin .jcode{font-weight:700;letter-spacing:.16em}
 .mmframe .mmjoin .jlink{color:inherit;opacity:.72;text-decoration:none}
 .mmframe .mmjoin .jtext{display:flex;flex-direction:column;gap:.5cqh}
-.mmframe .mmjoin.big{top:50%;right:var(--mx);transform:translateY(-50%);flex-direction:column;text-align:center;gap:1.5cqh;padding:2.6cqh 2.4cqw}
+.mmframe .mmjoin.big{background:#fff;box-shadow:none;top:50%;right:var(--mx);transform:translateY(-50%);flex-direction:column;text-align:center;gap:1.5cqh;padding:2.6cqh 2.4cqw}
 .mmframe .mmjoin.big .qr{width:min(24cqh,19cqw);height:auto;padding:5px}
 .mmframe .mmjoin.big .jcode{font-size:clamp(20px,3.1cqw,46px);margin-top:.3cqh}
 .mmframe .mmjoin.big .jlink{font-size:clamp(9px,1.15cqw,17px)}
