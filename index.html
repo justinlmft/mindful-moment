@@ -122,7 +122,7 @@
       <label class="toggle"><input type="checkbox" id="tMove" onchange="st.closeMove=this.checked;render()" checked> Move slide (close)</label>
       <label class="toggle"><input type="checkbox" id="tKind" onchange="st.kindness=this.checked;render()" checked> Kindness slide (close)</label>
 <label class="toggle" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><input type="checkbox" id="tTest" onchange="st.testMode=this.checked;render()"> 🧪 Test session <span style="color:var(--muted)">— the app popup says to ignore it</span></label>
-<label class="h" style="margin-top:12px;display:block">Live room URL <input type="text" id="tRoom" placeholder="https://… (blank = check-in only)" oninput="st.room=this.value.trim()" style="display:block;width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;box-sizing:border-box"></label>
+<label class="h" style="margin-top:12px;display:block">Live room URL <input type="text" id="tRoom" placeholder="https://… (blank = auto from the Academy calendar)" oninput="st.room=this.value.trim()" style="display:block;width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;box-sizing:border-box"></label>
     </div>
 
     <div class="dial sep">
@@ -2497,7 +2497,9 @@ const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mi
 /* The live room URL: where the practice can actually be watched (Zoom / StreamYard / the
    Academy live room). Published at Present as `room`; the SNB app popup turns it into a
    "watch live" button. Set a standing default here, or type it in the console panel
-   before presenting. BLANK = the app popup offers the check-in only. */
+   before presenting. BLANK = publish-live-session asks Circle for the matching
+   Academy calendar event (±6h) and uses its event page; if none matches, the app
+   popup falls back to check-in only. */
 const LIVE_ROOM_DEFAULT = "";
 const BEFORE_BODY="open the stuck not broken app and check-in before the practice.";
 const AFTER_BODY="open the app and check-in again.";
