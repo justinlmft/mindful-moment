@@ -122,6 +122,7 @@
       <label class="toggle"><input type="checkbox" id="tMove" onchange="st.closeMove=this.checked;render()" checked> Move slide (close)</label>
       <label class="toggle"><input type="checkbox" id="tKind" onchange="st.kindness=this.checked;render()" checked> Kindness slide (close)</label>
 <label class="toggle" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><input type="checkbox" id="tTest" onchange="st.testMode=this.checked;render()"> 🧪 Test session <span style="color:var(--muted)">— the app popup says to ignore it</span></label>
+<label class="h" style="margin-top:12px;display:block">Live room URL <input type="text" id="tRoom" placeholder="https://… (blank = check-in only)" oninput="st.room=this.value.trim()" style="display:block;width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;box-sizing:border-box"></label>
     </div>
 
     <div class="dial sep">
@@ -2493,6 +2494,11 @@ const SNB_LIVE = {
 const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mindful moment together right now.",
   /* used when the Test session toggle is on, so a real member who sees the popup knows to ignore it */
   testHost:"test session (please ignore)", testInvite:"this is just a test of a new feature. nothing is happening live right now." };
+/* The live room URL: where the practice can actually be watched (Zoom / StreamYard / the
+   Academy live room). Published at Present as `room`; the SNB app popup turns it into a
+   "watch live" button. Set a standing default here, or type it in the console panel
+   before presenting. BLANK = the app popup offers the check-in only. */
+const LIVE_ROOM_DEFAULT = "";
 const BEFORE_BODY="open the stuck not broken app and check-in before the practice.";
 const AFTER_BODY="open the app and check-in again.";
 const BEFORE_NOTE="let's check in before we practice.<br>open the stuck not broken app. if you're not in yet, scan the code or tap the link on screen.<br>notice where you are right now. there's no right answer.<br>take your time.";
@@ -2511,7 +2517,7 @@ async function publishLive(){
   try{
     const recipe={ senses:st.order.slice(), scene:(st.scene||"(surprise me)"), shape:{breath_each:st.breathEach, acknowledge:st.acknowledge, close_move:st.closeMove, kindness:st.kindness} };
     const practices=[{ref:"mm", label:"Mindful Moment", checkins:["before","after"]}];
-    const j=await sbFn("publish-live-session",{type:"mindful-moment", recipe:recipe, practices:practices, duration_minutes:60, host:(st.testMode?LIVE_COPY.testHost:LIVE_COPY.host), invite:(st.testMode?LIVE_COPY.testInvite:LIVE_COPY.invite)});
+    const j=await sbFn("publish-live-session",{type:"mindful-moment", recipe:recipe, practices:practices, duration_minutes:60, host:(st.testMode?LIVE_COPY.testHost:LIVE_COPY.host), invite:(st.testMode?LIVE_COPY.testInvite:LIVE_COPY.invite), room:((st.room||"").trim()||null)});
     LIVE={id:j.id, code:j.code, presenter_key:j.presenter_key};
     updateConsoleJoin(); pushJoin(); postSeamForCurrent();
   }catch(err){ showLiveError(err); }
@@ -2570,6 +2576,7 @@ let st = {
   closeMove:true,
   kindness:true,
   testMode:false,  // ON = the app popup tells members to ignore this session
+  room: LIVE_ROOM_DEFAULT,          // live room URL sent at Present (app "watch live" button)
   scene:""                            // '' surprise me (random per session) · or a named scene
 };
 
@@ -3145,6 +3152,7 @@ if(IS_STUDENT){ bootStudent(); }
 else {
   const css=document.createElement("style"); css.textContent=STUDENT_CSS; // console preview
   document.head.appendChild(css);
+  const tR=document.getElementById("tRoom"); if(tR) tR.value=st.room||"";
   render();
   fetchSNB();
 }
