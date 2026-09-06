@@ -2640,6 +2640,11 @@ function buildBeats(){
       "As we begin, acknowledge what else you might be holding onto — a current or past context. Not going into details. Just acknowledge what else you have, and give yourself permission to also practice mindfulness. — These Mindful Moments aren’t dismissive of what else you have, and aren’t rejecting it. They create space to acknowledge it, and eventually pave the way for those other feelings when you’re ready — the deeper work of the Unstucking Academy. For now, we acknowledge, and give ourselves permission to also be more present."));
   }
   
+  /* THE ARRIVING BREATH (app parity, 2026-09-06). Every other breath beat in this practice
+     is natural and unsteered — "don't change it, just notice it". These two are the only
+     steered breaths, and they bracket the practice: one in to arrive, one out to return. */
+  B.push(word("one breath", "We’ll begin with one breath taken on purpose. Breathe in deeply, and let it out however it wants to come out. — That’s the only breath we steer. From here on we let your body breathe the way it wants, and just pay attention to it."));
+
   st.order.forEach(k=>{
     if(st.breathEach) B.push(word("breath",BREATH_NOTE));
     const s=SENSES[k];
@@ -2650,13 +2655,18 @@ function buildBeats(){
 
   /* OUTRO (fixed arc) */
   m=B.length;
+  /* ORDER (app parity, 2026-09-06): kindness, then the body, then the breath. Kindness runs
+     inward before the body comes back, and the practice ends IN THE BODY rather than on
+     self-talk. The kindness copy is an offer with a real way to decline — it used to say
+     "you've earned it", which is a verdict on someone who may not be able to take it. */
+  if(st.kindness){
+    B.push(word("kindness","If you’ve got a genuine kind word for yourself, this is the time for it. Real, not performative. And if there isn’t one available right now, that’s alright — you showed up and practiced, and that stands on its own whether or not you can say it to yourself."));
+  }
   if(st.closeMove){
     B.push(word("move",
       "We’ll end this mindfulness practice the way we always do, inside the Unstucking Academy. Let your body move in whatever way it would like to. There’s no wrong way. No prescriptive movement. — Push, pull, squeeze, wiggle, jump, squat, stand, stretch, lie down, shimmy, or shake… Turn your camera off if you’d like, if you need to do something silly."));
   }
-  if(st.kindness){
-    B.push(word("kindness","Offer yourself a little kindness. You’ve earned it. Even a ‘good job, self’ counts."));
-  }
+  B.push(word("one breath", "And one more intentional breath to finish, the pair to the one we started with. In on purpose, and let the exhale leave however it likes."));
   B.push(checkinBeat("after"));
   B.push(cover("woo-hoo! 🎉",
     "You did it. You practiced mindfulness. You survived. — Good job to you if this was a return to simple mindfulness. Good job to you if this was your first time. Good job to you if this was a continuation of your practices."));
