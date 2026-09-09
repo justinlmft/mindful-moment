@@ -2561,9 +2561,9 @@ const SENSES = {
   sight:{ word:"sight", note:
     "Now, we’ll use your eyes. Open them if they’re closed, as they’re ready to open. You don’t need to do anything special — just look where they want you to look. If your neck wants to move to help your eyes see more, let your neck and eyes work together. — Is there one thing pulling at your eyes? What’s its shape? Let your eyes trace the edges. Notice how the light from the room touches it. And the shadows it creates." },
   sound:{ word:"sound", note:
-    "Now, what do you hear? Anything? Silence? — Inside the room… what do you hear? — Outside the room… what do you hear?" },
+    "Now, what do you hear? Anything? Silence? — Outside the room… what do you hear? — Inside the room… what do you hear?" },
   movement:{ word:"movement", note:
-    "Let’s add some gentle, on-purpose movement. Small and easy — you’re not performing. — Roll your ankles, slow, both directions. Roll your wrists, let your hands soften. Roll your shoulders — up, back, and down — let them drop. Stretch into whatever wants to lengthen. — Then pause. Notice what lingers. The sensation doesn’t stop the moment you do." },
+    "Let’s add some gentle, on-purpose movement. Small and easy — you’re not performing. — Roll your neck slowly, small arcs. Roll your shoulders — up, back, and down — let them drop. Roll your wrists, let your hands soften. Roll your ankles, slow, both directions. Stretch into whatever wants to lengthen. — Then pause. Notice what lingers. The sensation doesn’t stop the moment you do." },
   imagination:{ word:"imagination", note:
     "Let’s use your imagination. Bring to mind a place where you feel at ease — real or imagined, a memory or made up. Let it take shape. Indoors or out? Day or night? Where are you in it? — Look around: what do you see? What do you hear there, or is it quiet? What do you feel there — the air, the temperature, the ground beneath you?" }
 };
@@ -2572,7 +2572,7 @@ const BREATH_NOTE = "Check in with the natural ins and outs of your breath. How 
 
 /* ---------- STATE ---------- */
 let st = {
-  order:["sound","touch","sight"],   // selected senses, in spoken order
+  order:["sight","sound","touch"],   // spoken order: OUTSIDE → IN by distance (Justin, 2026-09-07)
   breathEach:true,
   acknowledge:true,
   closeMove:true,
@@ -2643,7 +2643,7 @@ function buildBeats(){
   /* THE ARRIVING BREATH (app parity, 2026-09-06). Every other breath beat in this practice
      is natural and unsteered — "don't change it, just notice it". These two are the only
      steered breaths, and they bracket the practice: one in to arrive, one out to return. */
-  B.push(word("one breath", "We’ll begin with one breath taken on purpose. Breathe in deeply, and let it out however it wants to come out. — That’s the only breath we steer. From here on we let your body breathe the way it wants, and just pay attention to it."));
+  B.push(word("One intentional breath", "One breath in on purpose. — Then we stop steering it: from here your body breathes the way it wants, and we just pay attention. One more on purpose at the very end."));
 
   st.order.forEach(k=>{
     if(st.breathEach) B.push(word("breath",BREATH_NOTE));
@@ -2655,18 +2655,18 @@ function buildBeats(){
 
   /* OUTRO (fixed arc) */
   m=B.length;
-  /* ORDER (app parity, 2026-09-06): kindness, then the body, then the breath. Kindness runs
-     inward before the body comes back, and the practice ends IN THE BODY rather than on
-     self-talk. The kindness copy is an offer with a real way to decline — it used to say
-     "you've earned it", which is a verdict on someone who may not be able to take it. */
+  /* WORKING OUTWARD REVERSES THE WAY IN (Justin, 2026-09-07): body → brain. The body moves
+     first, then the kind word, then the breath that frames the practice. The kindness copy is
+     an offer with a real way to decline — it used to say "you've earned it", which is a
+     verdict on someone who may not be able to take it. */
+  if(st.closeMove){
+    B.push(word("move",
+      "The way we always close, inside the Unstucking Academy. Let your body move in whatever way it would like to. There’s no wrong way. No prescriptive movement. — Push, pull, squeeze, wiggle, jump, squat, stand, stretch, lie down, shimmy, or shake… Turn your camera off if you’d like, if you need to do something silly."));
+  }
   if(st.kindness){
     B.push(word("kindness","If you’ve got a genuine kind word for yourself, this is the time for it. Real, not performative. And if there isn’t one available right now, that’s alright — you showed up and practiced, and that stands on its own whether or not you can say it to yourself."));
   }
-  if(st.closeMove){
-    B.push(word("move",
-      "We’ll end this mindfulness practice the way we always do, inside the Unstucking Academy. Let your body move in whatever way it would like to. There’s no wrong way. No prescriptive movement. — Push, pull, squeeze, wiggle, jump, squat, stand, stretch, lie down, shimmy, or shake… Turn your camera off if you’d like, if you need to do something silly."));
-  }
-  B.push(word("one breath", "And one more intentional breath to finish, the pair to the one we started with. In on purpose, and let the exhale leave however it likes."));
+  B.push(word("One intentional breath", "One more on purpose to finish — the pair to the one we started with. In on purpose, and let the exhale leave however it likes."));
   B.push(checkinBeat("after"));
   B.push(cover("woo-hoo! 🎉",
     "You did it. You practiced mindfulness. You survived. — Good job to you if this was a return to simple mindfulness. Good job to you if this was your first time. Good job to you if this was a continuation of your practices."));
