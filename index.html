@@ -2556,15 +2556,15 @@ function renderJoin(el, j){
 }
 
 const SENSES = {
-  touch:{ word:"touch", note:
+  touch:{ word:"Touch", note:
     "Now, let’s check in with touch. We’ll start with your entire body. — What is it you’re sitting, standing, laying, or leaning on? Can you feel its firmness? Or is it soft? Does it let you sink into it? — What can you feel specifically on your skin? The air? The fabric of your clothes? Something you can hold onto nearby?" },
-  sight:{ word:"sight", note:
+  sight:{ word:"Sight", note:
     "Now, we’ll use your eyes. Open them if they’re closed, as they’re ready to open. You don’t need to do anything special — just look where they want you to look. If your neck wants to move to help your eyes see more, let your neck and eyes work together. — Is there one thing pulling at your eyes? What’s its shape? Let your eyes trace the edges. Notice how the light from the room touches it. And the shadows it creates." },
-  sound:{ word:"sound", note:
+  sound:{ word:"Sound", note:
     "Now, what do you hear? Anything? Silence? — Outside the room… what do you hear? — Inside the room… what do you hear?" },
-  movement:{ word:"movement", note:
+  movement:{ word:"Movement", note:
     "Let’s add some gentle, on-purpose movement. Small and easy — you’re not performing. — Roll your neck slowly, small arcs. Roll your shoulders — up, back, and down — let them drop. Roll your wrists, let your hands soften. Roll your ankles, slow, both directions. Stretch into whatever wants to lengthen. — Then pause. Notice what lingers. The sensation doesn’t stop the moment you do." },
-  imagination:{ word:"imagination", note:
+  imagination:{ word:"Imagination", note:
     "Let’s use your imagination. Bring to mind a place where you feel at ease — real or imagined, a memory or made up. Let it take shape. Indoors or out? Day or night? Where are you in it? — Look around: what do you see? What do you hear there, or is it quiet? What do you feel there — the air, the temperature, the ground beneath you?" }
 };
 
@@ -2636,7 +2636,7 @@ function buildBeats(){
   let m=B.length;
   B.push(checkinBeat("before"));
   if(st.acknowledge){
-    B.push(word("acknowledge",
+    B.push(word("Acknowledge",
       "As we begin, acknowledge what else you might be holding onto — a current or past context. Not going into details. Just acknowledge what else you have, and give yourself permission to also practice mindfulness. — These Mindful Moments aren’t dismissive of what else you have, and aren’t rejecting it. They create space to acknowledge it, and eventually pave the way for those other feelings when you’re ready — the deeper work of the Unstucking Academy. For now, we acknowledge, and give ourselves permission to also be more present."));
   }
   
@@ -2646,11 +2646,11 @@ function buildBeats(){
   B.push(word("One intentional breath", "One breath in on purpose. — Then we stop steering it: from here your body breathes the way it wants, and we just pay attention. One more on purpose at the very end."));
 
   st.order.forEach(k=>{
-    if(st.breathEach) B.push(word("breath",BREATH_NOTE));
+    if(st.breathEach) B.push(word("Breath",BREATH_NOTE));
     const s=SENSES[k];
     if(s) B.push(word(s.word,s.note));
   });
-  if(st.breathEach && st.order.length) B.push(word("breath",BREATH_NOTE));
+  if(st.breathEach && st.order.length) B.push(word("Breath",BREATH_NOTE));
   sec("practice",m);
 
   /* OUTRO (fixed arc) */
@@ -2660,11 +2660,11 @@ function buildBeats(){
      an offer with a real way to decline — it used to say "you've earned it", which is a
      verdict on someone who may not be able to take it. */
   if(st.closeMove){
-    B.push(word("move",
+    B.push(word("Move",
       "The way we always close, inside the Unstucking Academy. Let your body move in whatever way it would like to. There’s no wrong way. No prescriptive movement. — Push, pull, squeeze, wiggle, jump, squat, stand, stretch, lie down, shimmy, or shake… Turn your camera off if you’d like, if you need to do something silly."));
   }
   if(st.kindness){
-    B.push(word("kindness","If you’ve got a genuine kind word for yourself, this is the time for it. Real, not performative. And if there isn’t one available right now, that’s alright — you showed up and practiced, and that stands on its own whether or not you can say it to yourself."));
+    B.push(word("Kindness or acknowledgement","If you’ve got a genuine kind word for yourself, this is the time for it. Real, not performative. And if there isn’t one available right now, that’s alright — you showed up and practiced, and that stands on its own whether or not you can say it to yourself."));
   }
   B.push(word("One intentional breath", "One more on purpose to finish — the pair to the one we started with. In on purpose, and let the exhale leave however it likes."));
   B.push(checkinBeat("after"));
