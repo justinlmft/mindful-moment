@@ -2501,8 +2501,8 @@ const LIVE_COPY = { host:"the unstucking academy", invite:"we're practicing a mi
    Academy calendar event (±6h) and uses its event page; if none matches, the app
    popup falls back to check-in only. */
 const LIVE_ROOM_DEFAULT = "";
-const BEFORE_BODY="open the stuck not broken app and check-in before the practice.";
-const AFTER_BODY="open the app and check-in again.";
+const BEFORE_BODY="Open the Stuck Not Broken app and check in before the practice.";
+const AFTER_BODY="Open the app and check in again.";
 const BEFORE_NOTE="let's check in before we practice.<br>open the stuck not broken app. if you're not in yet, scan the code or tap the link on screen.<br>notice where you are right now. there's no right answer.<br>take your time.";
 const AFTER_NOTE="let's check in one more time.<br>open the app again and notice where you are now.<br>not better or worse, just what's true.";
 let LIVE=null, LIVE_SEAM=undefined;
@@ -2589,7 +2589,7 @@ let st = {
    logo = show logo+byline (cover slides) */
 function cover(h,note,eyebrow,logo){ return {style:"cover",h,note:note||"",eyebrow:eyebrow||"",flow:"",logo:logo!==false,fixed:true}; }
 function word(h,note,fixed){ return {style:"word",h,note:note||"",eyebrow:"",flow:"",logo:false,fixed:!!fixed}; }
-function checkinBeat(phase){ return {style:"checkin", phase:phase, h:(phase==="before"?"a quick check-in.":"one more check-in."), body:(phase==="before"?BEFORE_BODY:AFTER_BODY), note:(phase==="before"?BEFORE_NOTE:AFTER_NOTE), eyebrow:"", flow:"", logo:true, fixed:true}; }
+function checkinBeat(phase){ return {style:"checkin", phase:phase, h:(phase==="before"?"A quick check-in.":"One more check-in."), body:(phase==="before"?BEFORE_BODY:AFTER_BODY), note:(phase==="before"?BEFORE_NOTE:AFTER_NOTE), eyebrow:"", flow:"", logo:true, fixed:true}; }
 
 /* CO-REGULATOR INVITATION (Justin, 2026-09-21) — Mindful Moment is the free door;
    this slide points the room one step further, into the Academy as a Co-Regulator
@@ -2601,9 +2601,9 @@ const COREG_LABEL="stucknotbroken.com/checkout/co-regulator";
    absolute so the standalone tool and the builder load the same file */
 const COREG_IMG="https://justinlmft.github.io/snb-session-builder/images/academy-home.webp";
 function coregBeat(){
-  return {style:"coreg", h:"Want to go further than presence?",
-    body:"Mindful Moment is where you rest. Capacity Builder is where you build.<br><br>Several times a month, Co-Regulator members practice live with me: three guided self-regulation practices, staying anchored in safety. It’s where you build the capacity to stay present with whatever shows up.<br><br><b>Join the Unstucking Academy as a Co-Regulator →</b>",
-    note:"Want to go further than presence? — Mindful Moment is where you rest. Capacity Builder is where you build. — Several times a month, Co-Regulator members practice live with me: three guided self-regulation practices, staying anchored in safety. It’s where you build the capacity to stay present with whatever shows up. — Scan the code or tap the link to join the Unstucking Academy as a Co-Regulator.",
+  return {style:"coreg", h:"Want to go further?",
+    body:"Mindful Moments are where you practice connecting to the present. Capacity Builders are where you self-regulate.<br><br>- weekly<br>- small groups with no pressure<br>- practice self-regulation skills within your capacity<br>- grow your capacity over time = more presence, more safety, less defense<br><br><b>Join the Unstucking Academy as a Co-Regulator →</b>",
+    note:"",
     url:COREG_URL, label:COREG_LABEL, img:COREG_IMG, eyebrow:"THE UNSTUCKING ACADEMY", flow:"", logo:true, fixed:true};
 }
 
@@ -2611,7 +2611,7 @@ function coregBeat(){
    Uses the site-wide [data-snb] system (same as the website): values are pulled
    live from site-data.json at present-time; the baked text is the fallback. */
 function eventsBeat(){
-  return {style:"events",h:"join us live",note:
+  return {style:"events",h:"Join us live",note:
     "If this gave you a little of what you needed, there’s more. We practice live every week or two inside the Unstucking Academy — Capacity Builders, more Mindful Moments, and monthly Q&As. — Here’s what’s coming up next. Come join us — I’d love to keep practicing with you. — (Check the Academy calendar for everything, plus the cohorts.)",
     eyebrow:"",flow:"",logo:true,fixed:true};
 }
@@ -2636,15 +2636,15 @@ function buildBeats(){
   const sec=(name,from)=>{for(let i=from;i<B.length;i++)B[i].section=name;};
 
   /* INTRO (fixed arc) */
-  const welcome=cover("welcome.",
+  const welcome=cover("Welcome.",
     "Welcome! The whole idea here is super simple. For the next 20ish minutes, we’re just creating a space to connect with the present moment. — Whether you’re here intentionally or doing something else… let my voice point your thoughts to the present moment. If your mind wanders, that’s okay — come back when prompted. Pause when needed. — Today we’ll move through: "+(st.order.length?st.order.map(cap).join(", "):"a few senses")+".");
   welcome.flow=flowHTML();
   B.push(welcome);
-  B.push(cover("the start of a<br>mindfulness practice.",
+  B.push(cover("The start of a<br>mindfulness practice.",
     "Of course, this is not therapy. This is not coaching or personal life advice. However, these very simple mindfulness prompts are what I use when I work with people to help them develop a connection to the present moment, cultivate a mindfulness practice, and even reduce experiences like anxiety. — These prompts are the beginning of a much deeper mindfulness practice."));
-  B.push(cover("participation?",
+  B.push(cover("Participation.",
     "There’s no pressure to participate. All you need to worry about is the present moment. — If you’d like to be more active and share an experience in the chat, go right ahead. Keep it very present-moment focused, following what we’re doing here."));
-  B.push(cover("no pressure.<br>just presence.",
+  B.push(cover("No pressure.<br>Just presence.",
     "The motto for this is: no pressure, just presence. From here on, I’ll give a simple prompt and a few follow-ups. But mostly, lots of quiet. That’s really it. Sound good? Let’s begin."));
   sec("intro",0);
 
@@ -2684,9 +2684,9 @@ function buildBeats(){
   }
   B.push(word("One intentional breath", "One more on purpose to finish — the pair to the one we started with. In on purpose, and let the exhale leave however it likes."));
   B.push(checkinBeat("after"));
-  B.push(cover("woo-hoo! 🎉",
+  B.push(cover("Woo-hoo! 🎉",
     "You did it. You practiced mindfulness. You survived. — Good job to you if this was a return to simple mindfulness. Good job to you if this was your first time. Good job to you if this was a continuation of your practices."));
-  B.push(cover("thank you.",
+  B.push(cover("Thank you.",
     "Thank you for being a part of this Mindful Moment. Thank you for taking the time to join. I hope you got a little bit of what you needed. — If you don’t mind, share in the chat what this was like for you. Maybe just a word if you’ve got one. Share more if you’ve got more. — Tell someone in the chat that you appreciate them sharing, or that you can relate, or just leave a thumbs up on their comment. — I hope we can meet again and continue to practice."));
   B.push(coregBeat());
   B.push(eventsBeat());
